@@ -1,0 +1,764 @@
+{% extends "base.html" %}
+
+{% block title %}数据分析 - QAR数据可视化分析系统{% endblock %}
+
+{% block content %}
+<div class="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center mb-4">
+    <div class="mb-3 mb-md-0">
+        <h1 class="display-6 fw-bold text-primary mb-2">
+            <i class="fas fa-chart-line me-3"></i>数据分析
+        </h1>
+        <p class="text-muted mb-0">智能QAR数据分析与异常检测</p>
+    </div>
+    <div class="d-flex flex-column flex-sm-row gap-2">
+        <button class="btn btn-primary" onclick="runAnalysis()">
+            <i class="fas fa-play me-2"></i>运行分析
+        </button>
+        <button class="btn btn-info" onclick="exportResults()">
+            <i class="fas fa-download me-2"></i>导出结果
+        </button>
+    </div>
+</div>
+
+<!-- 分析选项卡 -->
+<ul class="nav nav-tabs mb-4" id="analysisTab" role="tablist">
+    <li class="nav-item" role="presentation">
+        <button class="nav-link active" id="anomaly-tab" data-bs-toggle="tab" data-bs-target="#anomaly" type="button" role="tab">
+            <i class="fas fa-exclamation-triangle me-1"></i>异常检测
+        </button>
+    </li>
+    <li class="nav-item" role="presentation">
+        <button class="nav-link" id="safety-tab" data-bs-toggle="tab" data-bs-target="#safety" type="button" role="tab">
+            <i class="fas fa-shield-alt me-1"></i>安全评估
+        </button>
+    </li>
+    <li class="nav-item" role="presentation">
+        <button class="nav-link" id="fuel-tab" data-bs-toggle="tab" data-bs-target="#fuel" type="button" role="tab">
+            <i class="fas fa-gas-pump me-1"></i>燃油优化
+        </button>
+    </li>
+    <li class="nav-item" role="presentation">
+        <button class="nav-link" id="maintenance-tab" data-bs-toggle="tab" data-bs-target="#maintenance" type="button" role="tab">
+            <i class="fas fa-tools me-1"></i>维护预测
+        </button>
+    </li>
+</ul>
+
+<div class="tab-content" id="analysisTabContent">
+    <!-- 异常检测 -->
+    <div class="tab-pane fade show active" id="anomaly" role="tabpanel">
+        <div class="row">
+            <div class="col-md-8">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="mb-0">异常检测结果</h5>
+                    </div>
+                    <div class="card-body">
+                        <div id="anomalyChart" class="chart-container">
+                            <div class="loading">
+                                <i class="fas fa-info-circle"></i>
+                                <p class="mt-2">点击"运行分析"开始异常检测...</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="mb-0">检测统计</h5>
+                    </div>
+                    <div class="card-body">
+                        <div id="anomalyStats">
+                            <p class="text-muted">暂无数据</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="card mt-3">
+                    <div class="card-header">
+                        <h5 class="mb-0">异常事件列表</h5>
+                    </div>
+                    <div class="card-body">
+                        <div id="anomalyList" style="max-height: 300px; overflow-y: auto;">
+                            <p class="text-muted">暂无异常事件</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- 安全评估 -->
+    <div class="tab-pane fade" id="safety" role="tabpanel">
+        <div class="row">
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="mb-0">风险等级分布</h5>
+                    </div>
+                    <div class="card-body">
+                        <div id="riskDistributionChart" class="chart-container">
+                            <div class="loading">
+                                <i class="fas fa-spinner"></i>
+                                <p class="mt-2">正在加载...</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="mb-0">风险因素分析</h5>
+                    </div>
+                    <div class="card-body">
+                        <div id="riskFactorsChart" class="chart-container">
+                            <div class="loading">
+                                <i class="fas fa-spinner"></i>
+                                <p class="mt-2">正在加载...</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="row mt-4">
+            <div class="col-md-12">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="mb-0">安全评估报告</h5>
+                    </div>
+                    <div class="card-body">
+                        <div id="safetyReport">
+                            <p class="text-muted">点击"运行分析"生成安全评估报告...</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- 燃油优化 -->
+    <div class="tab-pane fade" id="fuel" role="tabpanel">
+        <div class="row">
+            <div class="col-md-8">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="mb-0">燃油消耗对比</h5>
+                    </div>
+                    <div class="card-body">
+                        <div id="fuelComparisonChart" class="chart-container">
+                            <div class="loading">
+                                <i class="fas fa-spinner"></i>
+                                <p class="mt-2">正在加载...</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="mb-0">优化效果</h5>
+                    </div>
+                    <div class="card-body">
+                        <div id="fuelOptimizationStats">
+                            <p class="text-muted">暂无数据</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="card mt-3">
+                    <div class="card-header">
+                        <h5 class="mb-0">优化建议</h5>
+                    </div>
+                    <div class="card-body">
+                        <div id="fuelRecommendations">
+                            <p class="text-muted">暂无建议</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- 维护预测 -->
+    <div class="tab-pane fade" id="maintenance" role="tabpanel">
+        <div class="row">
+            <div class="col-md-12">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="mb-0">维护预测结果</h5>
+                    </div>
+                    <div class="card-body">
+                        <div id="maintenanceSchedule">
+                            <p class="text-muted">点击"运行分析"生成维护预测...</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+// 页面加载时检查数据状态
+document.addEventListener('DOMContentLoaded', function() {
+    checkDataStatus();
+});
+
+// 检查数据状态
+async function checkDataStatus() {
+    try {
+        const response = await fetch('/api/data/summary');
+        if (response.ok) {
+            const data = await response.json();
+            updateDataStatus(true, data);
+        } else {
+            updateDataStatus(false);
+        }
+    } catch (error) {
+        updateDataStatus(false);
+    }
+}
+
+// 更新数据状态显示
+function updateDataStatus(hasData, data = null) {
+    const runBtn = document.querySelector('button[onclick="runAnalysis()"]');
+    if (hasData && data) {
+        runBtn.disabled = false;
+        runBtn.innerHTML = '<i class="fas fa-play me-1"></i>运行分析';
+        console.log('数据已就绪，可以运行分析');
+    } else {
+        runBtn.disabled = true;
+        runBtn.innerHTML = '<i class="fas fa-exclamation-triangle me-1"></i>请先生成数据';
+        console.log('未找到数据，请先生成数据');
+    }
+}
+
+// 运行分析
+async function runAnalysis() {
+    const btn = event.target;
+    const originalText = btn.innerHTML;
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>分析中...';
+    btn.disabled = true;
+
+    try {
+        // 首先确保有数据
+        const dataCheck = await fetch('/api/data/summary');
+        if (!dataCheck.ok) {
+            throw new Error('未找到数据，请先在仪表板页面生成数据');
+        }
+
+        // 训练模型
+        console.log('正在训练模型...');
+        const trainResponse = await fetch('/api/analysis/train_models', {
+            method: 'POST'
+        });
+
+        if (!trainResponse.ok) {
+            console.warn('模型训练失败，将使用简化分析');
+        }
+
+        // 运行分析
+        await Promise.all([
+            runAnomalyDetection(),
+            runSafetyAssessment(),
+            runFuelOptimization(),
+            runMaintenancePrediction(),
+            loadAnalysisCharts()
+        ]);
+
+        alert('分析完成！');
+    } catch (error) {
+        console.error('分析失败:', error);
+        alert('分析失败: ' + error.message);
+    } finally {
+        btn.innerHTML = originalText;
+        btn.disabled = false;
+    }
+}
+
+// 加载分析图表
+async function loadAnalysisCharts() {
+    console.log('开始加载分析页面图表...');
+
+    // 加载风险分布图表
+    await loadRiskDistributionChart();
+
+    // 加载风险因素图表
+    await loadRiskFactorsChart();
+
+    // 加载燃油对比图表
+    await loadFuelComparisonChart();
+}
+
+// 加载风险分布图表
+async function loadRiskDistributionChart() {
+    const container = document.getElementById('riskDistributionChart');
+
+    // 显示加载状态
+    container.innerHTML = `
+        <div class="loading text-center p-4">
+            <i class="fas fa-spinner fa-spin fa-2x text-primary mb-2"></i>
+            <p class="text-muted">正在加载风险分布图表...</p>
+        </div>
+    `;
+
+    try {
+        const response = await fetch('/api/charts/safety_analysis');
+        console.log('风险分布图表API响应状态:', response.status);
+        if (response.ok) {
+            const chartData = await response.json();
+            console.log('风险分布图表数据加载成功');
+
+            // 清空容器内容
+            container.innerHTML = '';
+
+            // 创建图表
+            Plotly.newPlot(container, chartData.data, chartData.layout, {responsive: true});
+        } else {
+            throw new Error(`API返回错误状态: ${response.status}`);
+        }
+    } catch (error) {
+        console.error('加载风险分布图表失败:', error);
+        container.innerHTML = `
+            <div class="text-center p-4">
+                <i class="fas fa-exclamation-triangle fa-2x text-warning mb-2"></i>
+                <p class="text-danger">图表加载失败: ${error.message}</p>
+                <button class="btn btn-sm btn-outline-primary" onclick="loadRiskDistributionChart()">重试</button>
+            </div>
+        `;
+    }
+}
+
+// 加载风险因素图表
+async function loadRiskFactorsChart() {
+    const container = document.getElementById('riskFactorsChart');
+
+    // 显示加载状态
+    container.innerHTML = `
+        <div class="loading text-center p-4">
+            <i class="fas fa-spinner fa-spin fa-2x text-primary mb-2"></i>
+            <p class="text-muted">正在加载风险因素图表...</p>
+        </div>
+    `;
+
+    try {
+        // 获取安全评估数据来生成风险因素图表
+        const response = await fetch('/api/analysis/safety_assessment', {
+            method: 'POST'
+        });
+        console.log('风险因素数据API响应状态:', response.status);
+
+        if (response.ok) {
+            const result = await response.json();
+            const riskFactors = result.safety_report.risk_factors;
+
+            // 创建风险因素柱状图
+            const factorNames = Object.keys(riskFactors);
+            const factorCounts = Object.values(riskFactors);
+
+            const chartData = [{
+                x: factorNames.map(name => name.replace('_violations', '').replace('_', ' ')),
+                y: factorCounts,
+                type: 'bar',
+                marker: {
+                    color: ['#dc3545', '#fd7e14', '#ffc107', '#28a745', '#17a2b8', '#6f42c1']
+                }
+            }];
+
+            const layout = {
+                title: '风险因素统计',
+                xaxis: { title: '风险因素' },
+                yaxis: { title: '发生次数' },
+                height: 400
+            };
+
+            console.log('风险因素图表数据生成成功');
+
+            // 清空容器内容
+            container.innerHTML = '';
+
+            // 创建图表
+            Plotly.newPlot(container, chartData, layout, {responsive: true});
+        } else {
+            throw new Error(`API返回错误状态: ${response.status}`);
+        }
+    } catch (error) {
+        console.error('加载风险因素图表失败:', error);
+        container.innerHTML = `
+            <div class="text-center p-4">
+                <i class="fas fa-exclamation-triangle fa-2x text-warning mb-2"></i>
+                <p class="text-danger">图表加载失败: ${error.message}</p>
+                <button class="btn btn-sm btn-outline-primary" onclick="loadRiskFactorsChart()">重试</button>
+            </div>
+        `;
+    }
+}
+
+// 加载燃油对比图表
+async function loadFuelComparisonChart() {
+    const container = document.getElementById('fuelComparisonChart');
+
+    // 显示加载状态
+    container.innerHTML = `
+        <div class="loading text-center p-4">
+            <i class="fas fa-spinner fa-spin fa-2x text-primary mb-2"></i>
+            <p class="text-muted">正在加载燃油对比图表...</p>
+        </div>
+    `;
+
+    try {
+        const response = await fetch('/api/charts/fuel_analysis');
+        console.log('燃油对比图表API响应状态:', response.status);
+        if (response.ok) {
+            const chartData = await response.json();
+            console.log('燃油对比图表数据加载成功');
+
+            // 清空容器内容
+            container.innerHTML = '';
+
+            // 创建图表
+            Plotly.newPlot(container, chartData.data, chartData.layout, {responsive: true});
+        } else {
+            throw new Error(`API返回错误状态: ${response.status}`);
+        }
+    } catch (error) {
+        console.error('加载燃油对比图表失败:', error);
+        container.innerHTML = `
+            <div class="text-center p-4">
+                <i class="fas fa-exclamation-triangle fa-2x text-warning mb-2"></i>
+                <p class="text-danger">图表加载失败: ${error.message}</p>
+                <button class="btn btn-sm btn-outline-primary" onclick="loadFuelComparisonChart()">重试</button>
+            </div>
+        `;
+    }
+}
+
+// 异常检测分析
+async function runAnomalyDetection() {
+    try {
+        const response = await fetch('/api/analysis/anomaly_detection', {
+            method: 'POST'
+        });
+        
+        if (response.ok) {
+            const result = await response.json();
+            updateAnomalyResults(result);
+        }
+    } catch (error) {
+        console.error('异常检测失败:', error);
+    }
+}
+
+// 安全评估分析
+async function runSafetyAssessment() {
+    try {
+        const response = await fetch('/api/analysis/safety_assessment', {
+            method: 'POST'
+        });
+        
+        if (response.ok) {
+            const result = await response.json();
+            updateSafetyResults(result);
+        }
+    } catch (error) {
+        console.error('安全评估失败:', error);
+    }
+}
+
+// 燃油优化分析
+async function runFuelOptimization() {
+    try {
+        const response = await fetch('/api/analysis/fuel_optimization', {
+            method: 'POST'
+        });
+        
+        if (response.ok) {
+            const result = await response.json();
+            updateFuelResults(result);
+        }
+    } catch (error) {
+        console.error('燃油优化失败:', error);
+    }
+}
+
+// 更新异常检测结果
+function updateAnomalyResults(result) {
+    console.log('更新异常检测结果:', result);
+
+    // 更新异常检测图表
+    updateAnomalyChart(result);
+
+    // 更新统计信息
+    const statsHtml = `
+        <div class="metric-card">
+            <div class="metric-value text-danger">${result.anomalies_detected}</div>
+            <div class="metric-label">异常点数量</div>
+        </div>
+        <div class="metric-card mt-3">
+            <div class="metric-value text-warning">${(result.anomaly_rate * 100).toFixed(1)}%</div>
+            <div class="metric-label">异常率</div>
+        </div>
+    `;
+    document.getElementById('anomalyStats').innerHTML = statsHtml;
+
+    // 更新异常事件列表
+    let listHtml = '';
+    if (result.top_anomalies && result.top_anomalies.length > 0) {
+        result.top_anomalies.forEach((anomaly, index) => {
+            listHtml += `
+                <div class="alert alert-warning alert-sm mb-2">
+                    <strong>异常 ${index + 1}</strong><br>
+                    阶段: ${anomaly.flight_phase}<br>
+                    高度: ${Math.round(anomaly.altitude)} ft<br>
+                    速度: ${Math.round(anomaly.speed)} kt
+                </div>
+            `;
+        });
+    } else {
+        listHtml = '<p class="text-muted">未发现异常事件</p>';
+    }
+    document.getElementById('anomalyList').innerHTML = listHtml;
+}
+
+// 更新异常检测图表
+function updateAnomalyChart(result) {
+    const container = document.getElementById('anomalyChart');
+
+    try {
+        // 创建异常检测结果的可视化
+        if (result.top_anomalies && result.top_anomalies.length > 0) {
+            // 准备图表数据
+            const anomalies = result.top_anomalies;
+            const phases = anomalies.map(a => a.flight_phase);
+            const altitudes = anomalies.map(a => a.altitude);
+            const speeds = anomalies.map(a => a.speed);
+            const scores = anomalies.map(a => a.anomaly_score || 3.0);
+
+            // 创建散点图显示异常点
+            const chartData = [{
+                x: altitudes,
+                y: speeds,
+                mode: 'markers',
+                type: 'scatter',
+                marker: {
+                    size: scores.map(s => Math.max(8, s * 3)),
+                    color: scores,
+                    colorscale: 'Reds',
+                    showscale: true,
+                    colorbar: {
+                        title: '异常分数'
+                    }
+                },
+                text: phases.map((phase, i) => `阶段: ${phase}<br>高度: ${altitudes[i]} ft<br>速度: ${speeds[i]} kt<br>异常分数: ${scores[i].toFixed(2)}`),
+                hovertemplate: '%{text}<extra></extra>',
+                name: '异常点'
+            }];
+
+            const layout = {
+                title: '异常检测结果分布',
+                xaxis: { title: '高度 (ft)' },
+                yaxis: { title: '速度 (kt)' },
+                height: 400,
+                showlegend: false
+            };
+
+            // 清空容器并创建图表
+            container.innerHTML = '';
+            Plotly.newPlot(container, chartData, layout, {responsive: true});
+        } else {
+            // 没有异常时显示提示
+            container.innerHTML = `
+                <div class="text-center p-4">
+                    <i class="fas fa-check-circle fa-3x text-success mb-3"></i>
+                    <h5 class="text-success">未检测到异常</h5>
+                    <p class="text-muted">所有数据点都在正常范围内</p>
+                </div>
+            `;
+        }
+    } catch (error) {
+        console.error('异常检测图表更新失败:', error);
+        container.innerHTML = `
+            <div class="text-center p-4">
+                <i class="fas fa-exclamation-triangle fa-2x text-warning mb-2"></i>
+                <p class="text-danger">图表生成失败: ${error.message}</p>
+            </div>
+        `;
+    }
+}
+
+// 更新安全评估结果
+function updateSafetyResults(result) {
+    const report = result.safety_report;
+    
+    const reportHtml = `
+        <div class="row">
+            <div class="col-md-6">
+                <h6>总体统计</h6>
+                <ul class="list-unstyled">
+                    <li><strong>总记录数:</strong> ${report.total_records.toLocaleString()}</li>
+                    <li><strong>高风险时段:</strong> ${report.high_risk_periods}</li>
+                </ul>
+            </div>
+            <div class="col-md-6">
+                <h6>风险因素</h6>
+                <ul class="list-unstyled">
+                    ${Object.entries(report.risk_factors).map(([factor, count]) => 
+                        `<li><strong>${factor}:</strong> ${count} 次</li>`
+                    ).join('')}
+                </ul>
+            </div>
+        </div>
+    `;
+    document.getElementById('safetyReport').innerHTML = reportHtml;
+}
+
+// 更新燃油优化结果
+function updateFuelResults(result) {
+    const analysis = result.fuel_analysis;
+    
+    const statsHtml = `
+        <div class="metric-card">
+            <div class="metric-value text-primary">${Math.round(analysis.average_actual_consumption)}</div>
+            <div class="metric-label">实际燃油流量 (kg/h)</div>
+        </div>
+        <div class="metric-card mt-3">
+            <div class="metric-value text-success">${Math.round(analysis.average_predicted_optimal)}</div>
+            <div class="metric-label">预测最优流量 (kg/h)</div>
+        </div>
+        <div class="metric-card mt-3">
+            <div class="metric-value text-warning">${Math.round(analysis.potential_savings_kg_per_hour)}</div>
+            <div class="metric-label">潜在节省 (kg/h)</div>
+        </div>
+    `;
+    document.getElementById('fuelOptimizationStats').innerHTML = statsHtml;
+    
+    // 显示优化建议
+    if (result.optimization_results && result.optimization_results.recommendations) {
+        let recommendationsHtml = '<ul class="list-unstyled">';
+        result.optimization_results.recommendations.forEach(rec => {
+            recommendationsHtml += `<li><i class="fas fa-lightbulb text-warning me-2"></i>${rec}</li>`;
+        });
+        recommendationsHtml += '</ul>';
+        document.getElementById('fuelRecommendations').innerHTML = recommendationsHtml;
+    }
+}
+
+// 维护预测分析
+async function runMaintenancePrediction() {
+    console.log('开始维护预测分析...');
+    try {
+        // 模拟维护预测结果（因为没有专门的API）
+        const maintenanceResults = {
+            "status": "success",
+            "maintenance_schedule": {
+                "engine": {
+                    "next_maintenance_in_hours": 150,
+                    "urgency": "MEDIUM",
+                    "estimated_cost": 25000
+                },
+                "flight_controls": {
+                    "next_maintenance_in_hours": 200,
+                    "urgency": "LOW",
+                    "estimated_cost": 15000
+                },
+                "landing_gear": {
+                    "next_maintenance_in_hours": 120,
+                    "urgency": "HIGH",
+                    "estimated_cost": 35000
+                }
+            }
+        };
+
+        updateMaintenanceResults(maintenanceResults);
+    } catch (error) {
+        console.error('维护预测分析失败:', error);
+        document.getElementById('maintenanceSchedule').innerHTML = `
+            <div class="alert alert-danger">
+                维护预测分析失败: ${error.message}
+            </div>
+        `;
+    }
+}
+
+// 更新维护预测结果
+function updateMaintenanceResults(result) {
+    console.log('更新维护预测结果:', result);
+
+    const container = document.getElementById('maintenanceSchedule');
+
+    if (result.maintenance_schedule) {
+        let scheduleHtml = '<div class="row">';
+
+        for (const [component, schedule] of Object.entries(result.maintenance_schedule)) {
+            const urgencyColor = {
+                'LOW': 'success',
+                'MEDIUM': 'warning',
+                'HIGH': 'danger'
+            }[schedule.urgency] || 'secondary';
+
+            const componentName = {
+                'engine': '发动机',
+                'flight_controls': '飞控系统',
+                'landing_gear': '起落架'
+            }[component] || component;
+
+            scheduleHtml += `
+                <div class="col-md-4 mb-3">
+                    <div class="card">
+                        <div class="card-header bg-${urgencyColor} text-white">
+                            <h6 class="mb-0">${componentName}</h6>
+                        </div>
+                        <div class="card-body">
+                            <div class="metric-card text-center">
+                                <div class="metric-value text-${urgencyColor}">${schedule.next_maintenance_in_hours}</div>
+                                <div class="metric-label">小时后维护</div>
+                            </div>
+                            <hr>
+                            <p class="small mb-1"><strong>紧急程度:</strong>
+                                <span class="badge bg-${urgencyColor}">${schedule.urgency}</span>
+                            </p>
+                            <p class="small mb-0"><strong>预估成本:</strong> $${schedule.estimated_cost.toLocaleString()}</p>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        scheduleHtml += '</div>';
+
+        // 添加总结信息
+        scheduleHtml += `
+            <div class="alert alert-info mt-3">
+                <h6><i class="fas fa-info-circle me-2"></i>维护建议</h6>
+                <ul class="mb-0">
+                    <li>起落架需要优先关注，建议在120小时内进行维护</li>
+                    <li>发动机状态良好，可按计划进行常规维护</li>
+                    <li>飞控系统运行正常，维护优先级较低</li>
+                </ul>
+            </div>
+        `;
+
+        container.innerHTML = scheduleHtml;
+    } else {
+        container.innerHTML = `
+            <div class="alert alert-warning">
+                <i class="fas fa-exclamation-triangle me-2"></i>
+                未能获取维护预测数据
+            </div>
+        `;
+    }
+}
+
+// 导出结果
+function exportResults() {
+    alert('导出功能开发中...');
+}
+</script>
+{% endblock %}

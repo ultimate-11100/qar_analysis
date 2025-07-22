@@ -1,0 +1,30 @@
+version: '3.8'
+
+services:
+  qar-analysis:
+    build: .
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./data:/app/data
+      - ./static:/app/static
+      - ./logs:/app/logs
+    environment:
+      - PYTHONPATH=/app/src
+      - PYTHONUNBUFFERED=1
+    restart: unless-stopped
+    
+  # 可选：添加数据库服务
+  # postgres:
+  #   image: postgres:13
+  #   environment:
+  #     POSTGRES_DB: qar_analysis
+  #     POSTGRES_USER: qar_user
+  #     POSTGRES_PASSWORD: qar_password
+  #   volumes:
+  #     - postgres_data:/var/lib/postgresql/data
+  #   ports:
+  #     - "5432:5432"
+
+# volumes:
+#   postgres_data:

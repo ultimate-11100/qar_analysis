@@ -1,0 +1,29 @@
+{
+  "analysis_timestamp": "2025-07-12T02:41:16.374411",
+  "data_summary": {
+    "total_records": 7200,
+    "flight_duration_minutes": 120,
+    "flight_phases": {
+      "cruise": 3601,
+      "climb": 1224,
+      "descent": 1224,
+      "taxi_out": 360,
+      "approach": 360,
+      "takeoff": 216,
+      "landing": 144,
+      "taxi_in": 71
+    }
+  },
+  "safety_analysis": {
+    "anomalies_detected": 720,
+    "safety_report": {
+      "total_records": 7200,
+      "risk_summary": {
+        "MEDIUM": 5139,
+        "HIGH": 2031,
+        "CRITICAL": 17,
+        "LOW": 13
+      },
+      "high_risk_periods": 2048,
+      "risk_factors": {
+        "altitude_violations": 

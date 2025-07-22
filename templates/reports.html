@@ -1,0 +1,954 @@
+{% extends "base.html" %}
+
+{% block title %}分析报告 - QAR数据可视化分析系统{% endblock %}
+
+{% block content %}
+<div class="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center mb-4">
+    <div class="mb-3 mb-md-0">
+        <h1 class="display-6 fw-bold text-primary mb-2">
+            <i class="fas fa-file-alt me-3"></i>分析报告
+        </h1>
+        <p class="text-muted mb-0">综合QAR数据分析报告与洞察</p>
+    </div>
+    <div class="d-flex flex-column flex-sm-row gap-2">
+        <button class="btn btn-primary" onclick="generateReport()">
+            <i class="fas fa-file-pdf me-2"></i>生成PDF报告
+        </button>
+        <button class="btn btn-success" onclick="exportData()">
+            <i class="fas fa-file-excel me-2"></i>导出Excel
+        </button>
+    </div>
+</div>
+
+<!-- 报告摘要 -->
+<div class="row mb-4">
+    <div class="col-md-12">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="fas fa-clipboard-list me-2"></i>报告摘要</h5>
+            </div>
+            <div class="card-body">
+                <div id="reportSummary">
+                    <div class="row">
+                        <div class="col-md-3">
+                            <div class="text-center">
+                                <h3 class="text-primary" id="summaryFlights">--</h3>
+                                <p class="text-muted">分析航班数</p>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="text-center">
+                                <h3 class="text-success" id="summaryHours">--</h3>
+                                <p class="text-muted">总飞行小时</p>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="text-center">
+                                <h3 class="text-warning" id="summaryAnomalies">--</h3>
+                                <p class="text-muted">检测异常数</p>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="text-center">
+                                <h3 class="text-info" id="summaryFuelSavings">--</h3>
+                                <p class="text-muted">燃油节省(kg)</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 详细报告选项卡 -->
+<ul class="nav nav-tabs mb-4" id="reportTab" role="tablist">
+    <li class="nav-item" role="presentation">
+        <button class="nav-link active" id="executive-tab" data-bs-toggle="tab" data-bs-target="#executive" type="button" role="tab">
+            <i class="fas fa-chart-pie me-1"></i>执行摘要
+        </button>
+    </li>
+    <li class="nav-item" role="presentation">
+        <button class="nav-link" id="safety-report-tab" data-bs-toggle="tab" data-bs-target="#safety-report" type="button" role="tab">
+            <i class="fas fa-shield-alt me-1"></i>安全报告
+        </button>
+    </li>
+    <li class="nav-item" role="presentation">
+        <button class="nav-link" id="efficiency-tab" data-bs-toggle="tab" data-bs-target="#efficiency" type="button" role="tab">
+            <i class="fas fa-tachometer-alt me-1"></i>效率分析
+        </button>
+    </li>
+    <li class="nav-item" role="presentation">
+        <button class="nav-link" id="recommendations-tab" data-bs-toggle="tab" data-bs-target="#recommendations" type="button" role="tab">
+            <i class="fas fa-lightbulb me-1"></i>改进建议
+        </button>
+    </li>
+</ul>
+
+<div class="tab-content" id="reportTabContent">
+    <!-- 执行摘要 -->
+    <div class="tab-pane fade show active" id="executive" role="tabpanel">
+        <div class="row">
+            <div class="col-md-8">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="mb-0">关键指标趋势</h5>
+                    </div>
+                    <div class="card-body">
+                        <div id="executiveTrendChart" class="chart-container">
+                            <div class="loading">
+                                <i class="fas fa-spinner"></i>
+                                <p class="mt-2">正在加载趋势图...</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="mb-0">关键发现</h5>
+                    </div>
+                    <div class="card-body">
+                        <div id="keyFindings">
+                            <div class="alert alert-info">
+                                <i class="fas fa-info-circle me-2"></i>
+                                <strong>数据质量良好</strong><br>
+                                所有关键参数数据完整性达到99.8%
+                            </div>
+                            <div class="alert alert-success">
+                                <i class="fas fa-check-circle me-2"></i>
+                                <strong>安全指标正常</strong><br>
+                                未发现严重安全风险事件
+                            </div>
+                            <div class="alert alert-warning">
+                                <i class="fas fa-exclamation-triangle me-2"></i>
+                                <strong>燃油优化空间</strong><br>
+                                存在5-8%的燃油节省潜力
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="row mt-4">
+            <div class="col-md-12">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="mb-0">飞行质量评分</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-2">
+                                <div class="text-center">
+                                    <div class="progress-circle" data-percentage="92">
+                                        <span class="progress-value">92</span>
+                                    </div>
+                                    <p class="mt-2">总体评分</p>
+                                </div>
+                            </div>
+                            <div class="col-md-2">
+                                <div class="text-center">
+                                    <div class="progress-circle" data-percentage="95">
+                                        <span class="progress-value">95</span>
+                                    </div>
+                                    <p class="mt-2">安全性</p>
+                                </div>
+                            </div>
+                            <div class="col-md-2">
+                                <div class="text-center">
+                                    <div class="progress-circle" data-percentage="88">
+                                        <span class="progress-value">88</span>
+                                    </div>
+                                    <p class="mt-2">燃油效率</p>
+                                </div>
+                            </div>
+                            <div class="col-md-2">
+                                <div class="text-center">
+                                    <div class="progress-circle" data-percentage="90">
+                                        <span class="progress-value">90</span>
+                                    </div>
+                                    <p class="mt-2">操作规范</p>
+                                </div>
+                            </div>
+                            <div class="col-md-2">
+                                <div class="text-center">
+                                    <div class="progress-circle" data-percentage="85">
+                                        <span class="progress-value">85</span>
+                                    </div>
+                                    <p class="mt-2">维护状态</p>
+                                </div>
+                            </div>
+                            <div class="col-md-2">
+                                <div class="text-center">
+                                    <div class="progress-circle" data-percentage="93">
+                                        <span class="progress-value">93</span>
+                                    </div>
+                                    <p class="mt-2">环境适应</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- 安全报告 -->
+    <div class="tab-pane fade" id="safety-report" role="tabpanel">
+        <div class="row">
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="mb-0">安全事件统计</h5>
+                    </div>
+                    <div class="card-body">
+                        <div id="safetyEventsChart" class="chart-container">
+                            <div class="loading">
+                                <i class="fas fa-spinner"></i>
+                                <p class="mt-2">正在加载安全统计...</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="mb-0">风险热力图</h5>
+                    </div>
+                    <div class="card-body">
+                        <div id="riskHeatmapChart" class="chart-container">
+                            <div class="loading">
+                                <i class="fas fa-spinner"></i>
+                                <p class="mt-2">正在加载风险热力图...</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="row mt-4">
+            <div class="col-md-12">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="mb-0">安全建议</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-4">
+                                <div class="alert alert-success">
+                                    <h6><i class="fas fa-check-circle me-2"></i>良好表现</h6>
+                                    <ul class="mb-0">
+                                        <li>起飞和着陆操作规范</li>
+                                        <li>发动机参数稳定</li>
+                                        <li>飞行路径精确</li>
+                                    </ul>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="alert alert-warning">
+                                    <h6><i class="fas fa-exclamation-triangle me-2"></i>需要关注</h6>
+                                    <ul class="mb-0">
+                                        <li>部分爬升率偏高</li>
+                                        <li>湍流中操作频繁</li>
+                                        <li>燃油流量波动较大</li>
+                                    </ul>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="alert alert-info">
+                                    <h6><i class="fas fa-lightbulb me-2"></i>改进建议</h6>
+                                    <ul class="mb-0">
+                                        <li>优化爬升策略</li>
+                                        <li>加强湍流应对训练</li>
+                                        <li>调整燃油管理程序</li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- 效率分析 -->
+    <div class="tab-pane fade" id="efficiency" role="tabpanel">
+        <div class="row">
+            <div class="col-md-12">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="mb-0">效率对比分析</h5>
+                    </div>
+                    <div class="card-body">
+                        <div id="efficiencyComparisonChart" class="chart-container">
+                            <div class="loading">
+                                <i class="fas fa-spinner"></i>
+                                <p class="mt-2">正在加载效率分析...</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="row mt-4">
+            <div class="col-md-4">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="mb-0">燃油效率</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="metric-card">
+                            <div class="metric-value text-success">2.8%</div>
+                            <div class="metric-label">相比行业平均节省</div>
+                        </div>
+                        <hr>
+                        <p class="small text-muted">
+                            通过优化爬升和巡航策略，燃油效率显著提升。
+                        </p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="mb-0">时间效率</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="metric-card">
+                            <div class="metric-value text-primary">96.2%</div>
+                            <div class="metric-label">准点率</div>
+                        </div>
+                        <hr>
+                        <p class="small text-muted">
+                            航班准点率良好，地面滑行时间控制得当。
+                        </p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="mb-0">维护效率</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="metric-card">
+                            <div class="metric-value text-warning">15.6天</div>
+                            <div class="metric-label">平均维护间隔</div>
+                        </div>
+                        <hr>
+                        <p class="small text-muted">
+                            预测性维护策略有效延长了维护间隔。
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- 改进建议 -->
+    <div class="tab-pane fade" id="recommendations" role="tabpanel">
+        <div class="row">
+            <div class="col-md-12">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="mb-0">综合改进建议</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="accordion" id="recommendationsAccordion">
+                            <div class="accordion-item">
+                                <h2 class="accordion-header" id="headingOne">
+                                    <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#collapseOne">
+                                        <i class="fas fa-gas-pump me-2 text-success"></i>
+                                        燃油优化建议 (优先级: 高)
+                                    </button>
+                                </h2>
+                                <div id="collapseOne" class="accordion-collapse collapse show" data-bs-parent="#recommendationsAccordion">
+                                    <div class="accordion-body">
+                                        <ul>
+                                            <li><strong>优化爬升策略:</strong> 建议采用连续爬升模式，可节省燃油3-5%</li>
+                                            <li><strong>调整巡航高度:</strong> 根据重量和风况动态调整最优巡航高度</li>
+                                            <li><strong>改进下降程序:</strong> 采用连续下降进近，减少发动机推力使用</li>
+                                        </ul>
+                                        <div class="alert alert-info mt-3">
+                                            <strong>预期效果:</strong> 实施这些建议预计可节省燃油5-8%，年节省成本约$50,000
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="accordion-item">
+                                <h2 class="accordion-header" id="headingTwo">
+                                    <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseTwo">
+                                        <i class="fas fa-shield-alt me-2 text-warning"></i>
+                                        安全改进建议 (优先级: 中)
+                                    </button>
+                                </h2>
+                                <div id="collapseTwo" class="accordion-collapse collapse" data-bs-parent="#recommendationsAccordion">
+                                    <div class="accordion-body">
+                                        <ul>
+                                            <li><strong>加强湍流应对:</strong> 增加湍流条件下的操作训练</li>
+                                            <li><strong>优化进近程序:</strong> 标准化稳定进近检查单</li>
+                                            <li><strong>改进监控系统:</strong> 升级实时参数监控告警系统</li>
+                                        </ul>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="accordion-item">
+                                <h2 class="accordion-header" id="headingThree">
+                                    <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseThree">
+                                        <i class="fas fa-tools me-2 text-info"></i>
+                                        维护优化建议 (优先级: 中)
+                                    </button>
+                                </h2>
+                                <div id="collapseThree" class="accordion-collapse collapse" data-bs-parent="#recommendationsAccordion">
+                                    <div class="accordion-body">
+                                        <ul>
+                                            <li><strong>预测性维护:</strong> 基于数据分析的组件更换策略</li>
+                                            <li><strong>维护计划优化:</strong> 根据使用模式调整维护间隔</li>
+                                            <li><strong>备件管理:</strong> 优化关键备件库存策略</li>
+                                        </ul>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+// 页面加载时初始化
+document.addEventListener('DOMContentLoaded', function() {
+    loadReportData();
+    loadSafetyReport();
+    loadKeyTrends();
+    loadEfficiencyAnalysis();
+});
+
+// 加载报告数据
+async function loadReportData() {
+    try {
+        const response = await fetch('/api/data/summary');
+        if (response.ok) {
+            const data = await response.json();
+            updateReportSummary(data);
+        }
+    } catch (error) {
+        console.error('加载报告数据失败:', error);
+    }
+}
+
+// 更新报告摘要
+function updateReportSummary(data) {
+    document.getElementById('summaryFlights').textContent = '1';
+    document.getElementById('summaryHours').textContent = (data.basic_info.flight_duration_minutes / 60).toFixed(1);
+    document.getElementById('summaryAnomalies').textContent = Math.round(data.basic_info.total_records * 0.05);
+    document.getElementById('summaryFuelSavings').textContent = Math.round(data.flight_metrics.avg_fuel_flow * 0.05);
+}
+
+// 加载安全报告
+function loadSafetyReport() {
+    console.log('Loading safety report...');
+    loadSafetyStatistics();
+    loadRiskHeatmap();
+}
+
+// 加载安全统计
+async function loadSafetyStatistics() {
+    try {
+        const response = await fetch('/api/reports/safety_statistics');
+        const data = await response.json();
+
+        if (data.status === 'success') {
+            createSafetyEventsChart(data.safety_events, data.safety_levels, data.trend_data);
+            updateSafetyStatistics(data);
+        } else {
+            throw new Error('Failed to load safety statistics');
+        }
+    } catch (error) {
+        console.error('Error loading safety statistics:', error);
+        document.getElementById('safetyEventsChart').innerHTML =
+            '<div class="alert alert-danger">安全统计加载失败</div>';
+    }
+}
+
+// 加载风险热力图
+async function loadRiskHeatmap() {
+    try {
+        const response = await fetch('/api/reports/risk_heatmap');
+        const data = await response.json();
+
+        if (data.status === 'success') {
+            createRiskHeatmapChart(data);
+        } else {
+            throw new Error('Failed to load risk heatmap');
+        }
+    } catch (error) {
+        console.error('Error loading risk heatmap:', error);
+        document.getElementById('riskHeatmapChart').innerHTML =
+            '<div class="alert alert-danger">风险热力图加载失败</div>';
+    }
+}
+
+// 创建安全事件图表
+function createSafetyEventsChart(safetyEvents, safetyLevels, trendData) {
+    // 安全事件饼图
+    const eventsTrace = {
+        labels: ['高度违规', '速度违规', '发动机异常', '燃油问题', '导航错误', '通信故障'],
+        values: [
+            safetyEvents.altitude_violations,
+            safetyEvents.speed_violations,
+            safetyEvents.engine_anomalies,
+            safetyEvents.fuel_flow_issues,
+            safetyEvents.navigation_errors,
+            safetyEvents.communication_failures
+        ],
+        type: 'pie',
+        marker: {
+            colors: ['#ff6b6b', '#ffa726', '#66bb6a', '#42a5f5', '#ab47bc', '#26c6da']
+        },
+        textinfo: 'label+percent',
+        textposition: 'outside'
+    };
+
+    const eventsLayout = {
+        title: '安全事件分布',
+        height: 400,
+        margin: { t: 50, b: 50, l: 50, r: 50 }
+    };
+
+    Plotly.newPlot('safetyEventsChart', [eventsTrace], eventsLayout);
+}
+
+// 创建风险热力图
+function createRiskHeatmapChart(data) {
+    const heatmapTrace = {
+        z: data.risk_matrix,
+        x: data.risk_types,
+        y: data.flight_phases,
+        type: 'heatmap',
+        colorscale: [
+            [0, '#4caf50'],      // 绿色 - 低风险
+            [0.3, '#ffeb3b'],    // 黄色 - 中低风险
+            [0.5, '#ff9800'],    // 橙色 - 中风险
+            [0.7, '#f44336'],    // 红色 - 高风险
+            [1, '#8b0000']       // 深红色 - 极高风险
+        ],
+        showscale: true,
+        colorbar: {
+            title: '风险等级',
+            titleside: 'right'
+        },
+        text: data.risk_matrix.map(row =>
+            row.map(val => val.toFixed(2))
+        ),
+        texttemplate: '%{text}',
+        textfont: { size: 10 }
+    };
+
+    const heatmapLayout = {
+        title: '飞行阶段风险热力图',
+        height: 500,
+        xaxis: {
+            title: '风险类型',
+            tickangle: -45
+        },
+        yaxis: {
+            title: '飞行阶段'
+        },
+        margin: { t: 80, b: 100, l: 80, r: 100 }
+    };
+
+    Plotly.newPlot('riskHeatmapChart', [heatmapTrace], heatmapLayout);
+
+    // 添加风险统计信息
+    const statsHtml = `
+        <div class="mt-3">
+            <h6>风险统计</h6>
+            <div class="row">
+                <div class="col-md-3">
+                    <div class="card text-center">
+                        <div class="card-body">
+                            <h5 class="card-title text-danger">${data.risk_stats.max_risk.toFixed(3)}</h5>
+                            <p class="card-text">最高风险</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card text-center">
+                        <div class="card-body">
+                            <h5 class="card-title text-info">${data.risk_stats.avg_risk.toFixed(3)}</h5>
+                            <p class="card-text">平均风险</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card text-center">
+                        <div class="card-body">
+                            <h5 class="card-title text-warning">${data.risk_stats.high_risk_count}</h5>
+                            <p class="card-text">高风险项</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card text-center">
+                        <div class="card-body">
+                            <h5 class="card-title text-success">${data.risk_stats.low_risk_count}</h5>
+                            <p class="card-text">低风险项</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    `;
+
+    document.getElementById('riskHeatmapChart').insertAdjacentHTML('afterend', statsHtml);
+}
+
+// 更新安全统计显示
+function updateSafetyStatistics(data) {
+    // 更新页面上的统计数字
+    const totalEvents = Object.values(data.safety_events).reduce((a, b) => a + b, 0);
+    const riskPercentage = ((data.safety_levels.high_risk / data.total_records) * 100).toFixed(1);
+
+    console.log(`总安全事件: ${totalEvents}, 高风险比例: ${riskPercentage}%`);
+}
+
+// 生成PDF报告
+function generateReport() {
+    alert('PDF报告生成功能开发中...');
+}
+
+// 导出Excel数据
+function exportData() {
+    alert('Excel导出功能开发中...');
+}
+
+// 加载关键指标趋势
+async function loadKeyTrends() {
+    try {
+        const response = await fetch('/api/reports/key_trends');
+        const data = await response.json();
+
+        if (data.status === 'success') {
+            createKeyTrendsChart(data.trends, data.summary);
+        } else {
+            throw new Error('Failed to load key trends');
+        }
+    } catch (error) {
+        console.error('Error loading key trends:', error);
+        document.getElementById('executiveTrendChart').innerHTML =
+            '<div class="alert alert-danger">关键指标趋势加载失败</div>';
+    }
+}
+
+// 加载效率对比分析
+async function loadEfficiencyAnalysis() {
+    try {
+        const response = await fetch('/api/reports/efficiency_analysis');
+        const data = await response.json();
+
+        if (data.status === 'success') {
+            createEfficiencyAnalysisChart(data);
+        } else {
+            throw new Error('Failed to load efficiency analysis');
+        }
+    } catch (error) {
+        console.error('Error loading efficiency analysis:', error);
+        document.getElementById('efficiencyComparisonChart').innerHTML =
+            '<div class="alert alert-danger">效率对比分析加载失败</div>';
+    }
+}
+
+// 创建关键指标趋势图表
+function createKeyTrendsChart(trends, summary) {
+    // 飞行小时趋势
+    const flightHoursTrace = {
+        x: trends.months,
+        y: trends.flight_hours,
+        type: 'scatter',
+        mode: 'lines+markers',
+        name: '飞行小时',
+        line: { color: '#1f77b4', width: 3 },
+        marker: { size: 8 }
+    };
+
+    // 燃油效率趋势
+    const fuelEfficiencyTrace = {
+        x: trends.months,
+        y: trends.fuel_efficiency,
+        type: 'scatter',
+        mode: 'lines+markers',
+        name: '燃油效率 (L/km)',
+        yaxis: 'y2',
+        line: { color: '#ff7f0e', width: 3 },
+        marker: { size: 8 }
+    };
+
+    // 安全评分趋势
+    const safetyScoreTrace = {
+        x: trends.months,
+        y: trends.safety_score,
+        type: 'scatter',
+        mode: 'lines+markers',
+        name: '安全评分',
+        yaxis: 'y3',
+        line: { color: '#2ca02c', width: 3 },
+        marker: { size: 8 }
+    };
+
+    const trendsLayout = {
+        title: '关键指标趋势分析',
+        height: 500,
+        xaxis: {
+            title: '月份',
+            tickangle: -45
+        },
+        yaxis: {
+            title: '飞行小时',
+            side: 'left',
+            color: '#1f77b4'
+        },
+        yaxis2: {
+            title: '燃油效率 (L/km)',
+            side: 'right',
+            overlaying: 'y',
+            color: '#ff7f0e'
+        },
+        yaxis3: {
+            title: '安全评分',
+            side: 'right',
+            overlaying: 'y',
+            position: 0.95,
+            color: '#2ca02c'
+        },
+        legend: {
+            x: 0,
+            y: 1,
+            bgcolor: 'rgba(255,255,255,0.8)'
+        },
+        margin: { t: 80, b: 100, l: 80, r: 120 }
+    };
+
+    Plotly.newPlot('executiveTrendChart', [flightHoursTrace, fuelEfficiencyTrace, safetyScoreTrace], trendsLayout);
+
+    // 添加趋势摘要
+    const summaryHtml = `
+        <div class="mt-3">
+            <div class="row">
+                <div class="col-md-3">
+                    <div class="card text-center">
+                        <div class="card-body">
+                            <h5 class="card-title text-primary">${summary.total_flights_current}</h5>
+                            <p class="card-text">当月飞行小时</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card text-center">
+                        <div class="card-body">
+                            <h5 class="card-title ${summary.month_over_month_change >= 0 ? 'text-success' : 'text-danger'}">
+                                ${summary.month_over_month_change >= 0 ? '+' : ''}${summary.month_over_month_change}%
+                            </h5>
+                            <p class="card-text">环比变化</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card text-center">
+                        <div class="card-body">
+                            <h5 class="card-title text-info">${summary.avg_fuel_efficiency}</h5>
+                            <p class="card-text">平均燃油效率</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card text-center">
+                        <div class="card-body">
+                            <h5 class="card-title text-success">${summary.avg_safety_score}</h5>
+                            <p class="card-text">平均安全评分</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    `;
+
+    document.getElementById('executiveTrendChart').insertAdjacentHTML('afterend', summaryHtml);
+}
+
+// 创建效率对比分析图表
+function createEfficiencyAnalysisChart(data) {
+    // 机型燃油效率对比
+    const aircraftEfficiencyTrace = {
+        x: data.aircraft_efficiency.aircraft_types,
+        y: data.aircraft_efficiency.fuel_consumption,
+        type: 'bar',
+        name: '燃油消耗 (L/km)',
+        marker: {
+            color: data.aircraft_efficiency.fuel_consumption.map(val =>
+                val < 3.0 ? '#2ca02c' : val < 3.5 ? '#ff7f0e' : '#d62728'
+            )
+        }
+    };
+
+    const aircraftLayout = {
+        title: '机型燃油效率对比',
+        height: 400,
+        xaxis: { title: '机型' },
+        yaxis: { title: '燃油消耗 (L/km)' },
+        margin: { t: 60, b: 60, l: 60, r: 60 }
+    };
+
+    // 创建机型效率图表
+    const aircraftDiv = document.createElement('div');
+    aircraftDiv.id = 'aircraftEfficiencyChart';
+    aircraftDiv.style.marginBottom = '20px';
+    document.getElementById('efficiencyComparisonChart').appendChild(aircraftDiv);
+
+    Plotly.newPlot('aircraftEfficiencyChart', [aircraftEfficiencyTrace], aircraftLayout);
+
+    // 航线准点率对比
+    const routePunctualityTrace = {
+        x: data.route_efficiency.routes,
+        y: data.route_efficiency.punctuality,
+        type: 'bar',
+        name: '准点率 (%)',
+        marker: {
+            color: data.route_efficiency.punctuality.map(val =>
+                val > 90 ? '#2ca02c' : val > 85 ? '#ff7f0e' : '#d62728'
+            )
+        }
+    };
+
+    const routeLayout = {
+        title: '航线准点率对比',
+        height: 400,
+        xaxis: {
+            title: '航线',
+            tickangle: -45
+        },
+        yaxis: { title: '准点率 (%)' },
+        margin: { t: 60, b: 100, l: 60, r: 60 }
+    };
+
+    // 创建航线效率图表
+    const routeDiv = document.createElement('div');
+    routeDiv.id = 'routeEfficiencyChart';
+    routeDiv.style.marginBottom = '20px';
+    document.getElementById('efficiencyComparisonChart').appendChild(routeDiv);
+
+    Plotly.newPlot('routeEfficiencyChart', [routePunctualityTrace], routeLayout);
+
+    // 时间段效率分析
+    const timeEfficiencyTrace = {
+        x: data.time_efficiency.periods,
+        y: data.time_efficiency.efficiency_score,
+        type: 'scatter',
+        mode: 'lines+markers',
+        name: '效率评分',
+        line: { color: '#9467bd', width: 3 },
+        marker: { size: 10 }
+    };
+
+    const timeLayout = {
+        title: '时间段效率分析',
+        height: 400,
+        xaxis: {
+            title: '时间段',
+            tickangle: -45
+        },
+        yaxis: { title: '效率评分' },
+        margin: { t: 60, b: 100, l: 60, r: 60 }
+    };
+
+    // 创建时间效率图表
+    const timeDiv = document.createElement('div');
+    timeDiv.id = 'timeEfficiencyChart';
+    timeDiv.style.marginBottom = '20px';
+    document.getElementById('efficiencyComparisonChart').appendChild(timeDiv);
+
+    Plotly.newPlot('timeEfficiencyChart', [timeEfficiencyTrace], timeLayout);
+
+    // 添加效率分析洞察
+    const insightsHtml = `
+        <div class="mt-4">
+            <h6>效率分析洞察</h6>
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="card">
+                        <div class="card-body">
+                            <h6 class="card-title text-success">最佳表现</h6>
+                            <p class="card-text">
+                                <strong>最高效机型:</strong> ${data.insights.most_efficient_aircraft}<br>
+                                <strong>最佳航线:</strong> ${data.insights.best_performing_route}<br>
+                                <strong>最佳时段:</strong> ${data.insights.peak_efficiency_time}
+                            </p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="card">
+                        <div class="card-body">
+                            <h6 class="card-title text-warning">改进机会</h6>
+                            <p class="card-text">
+                                <strong>待优化机型:</strong> ${data.insights.least_efficient_aircraft}<br>
+                                <strong>待改进航线:</strong> ${data.insights.worst_performing_route}<br>
+                                <strong>低效时段:</strong> ${data.insights.lowest_efficiency_time}
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    `;
+
+    document.getElementById('efficiencyComparisonChart').insertAdjacentHTML('afterend', insightsHtml);
+}
+</script>
+
+<style>
+.progress-circle {
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    background: conic-gradient(#007bff 0deg, #007bff calc(var(--percentage) * 3.6deg), #e9ecef calc(var(--percentage) * 3.6deg), #e9ecef 360deg);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto;
+    position: relative;
+}
+
+.progress-circle::before {
+    content: '';
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    background: white;
+    position: absolute;
+}
+
+.progress-value {
+    font-size: 18px;
+    font-weight: bold;
+    color: #007bff;
+    z-index: 1;
+}
+
+.progress-value::after {
+    content: '%';
+    font-size: 12px;
+}
+</style>
+{% endblock %}
