@@ -172,7 +172,7 @@ python tests/test_qar_system.py
 ## 📞 联系方式
 
 如有问题或建议，请通过以下方式联系：
-- 邮箱：[your-email@example.com]
+- 邮箱：[418294908@qq.com]
 - GitHub Issues：[项目Issues页面]
 
 ---
